@@ -23,7 +23,7 @@ client.on('ready', () => {
 async function sendPaymentLog(user, product, txid, key, network) {
     const embed = new EmbedBuilder()
         .setTitle('💰 New Payment Received!')
-        .setColor(0x00ff00)
+        .setColor(0x00ff88)
         .addFields(
             { name: 'User', value: `<@${user.id}>`, inline: true },
             { name: 'Product', value: product, inline: true },
@@ -36,20 +36,27 @@ async function sendPaymentLog(user, product, txid, key, network) {
     await axios.post(WEBHOOK_URL, { embeds: [embed] }).catch(() => {});
 }
 
-// Commands
+// !panel - Attractive Store
 client.on('messageCreate', async message => {
     if (message.content === '!panel' && message.author.id === process.env.OWNER_ID) {
         const embed = new EmbedBuilder()
-            .setTitle('**StrikeX Store**')
-            .setDescription('**Premium Fortnite Cheats & Spoofers**')
-            .setColor(0x00ff00)
+            .setTitle('⚡ **StrikeX Store** ⚡')
+            .setDescription('**Premium Fortnite Cheats & HWID Spoofers**\nUndetected • Daily Updates • Instant Keys')
+            .setColor(0x00ff88)
+            .setThumbnail('https://i.imgur.com/strikexlogo.png') // Change this to your logo
             .addFields(
-                { name: '🔥 Fortnite Cheat', value: '⚡ 24h — $5\n⚡ 7d — $20\n⚡ 30d — $45\n⚡ Lifetime — $130' },
-                { name: '🛡️ Spoofer', value: '🔒 Perm — $35\n🔄 Temp — $15' }
-            );
+                { name: '🔥 Fortnite Cheat', value: '```24 Hours — $5\n7 Days — $20\n30 Days — $45\nLifetime — $130```', inline: false },
+                { name: '🛡️ HWID Spoofer', value: '```Permanent — $35\nTemporary — $15```', inline: false },
+                { name: '✅ How It Works', value: '1. Click Purchase\n2. Select Product\n3. Pay Crypto\n4. Paste TXID → Auto Verified' }
+            )
+            .setFooter({ text: 'StrikeX | Trusted Since 2025' })
+            .setTimestamp();
 
         const button = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('create_ticket').setLabel('Purchase').setStyle(ButtonStyle.Success).setEmoji('🛒')
+            new ButtonBuilder()
+                .setCustomId('create_ticket')
+                .setLabel('🛒 Purchase Now')
+                .setStyle(ButtonStyle.Success)
         );
 
         message.channel.send({ embeds: [embed], components: [button] });
@@ -61,7 +68,7 @@ client.on('messageCreate', async message => {
     }
 });
 
-// Ticket + Payment System
+// Ticket System
 client.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId === 'create_ticket') {
         const ticket = await interaction.guild.channels.create({
@@ -77,18 +84,18 @@ client.on('interactionCreate', async interaction => {
 
         const menu = new StringSelectMenuBuilder()
             .setCustomId('product_select')
-            .setPlaceholder('Choose product...')
+            .setPlaceholder('Select your product...')
             .addOptions([
                 { label: '24h Cheat', value: 'cheat_24h_5', emoji: '⚡' },
                 { label: '7d Cheat', value: 'cheat_7d_20', emoji: '⚡' },
                 { label: '30d Cheat', value: 'cheat_30d_45', emoji: '⚡' },
                 { label: 'Lifetime Cheat', value: 'cheat_life_130', emoji: '⚡' },
-                { label: 'Perm Spoofer', value: 'spoof_perm_35', emoji: '🔒' },
-                { label: 'Temp Spoofer', value: 'spoof_temp_15', emoji: '🔄' }
+                { label: 'Permanent Spoofer', value: 'spoof_perm_35', emoji: '🔒' },
+                { label: 'Temporary Spoofer', value: 'spoof_temp_15', emoji: '🔄' }
             ]);
 
         ticket.send({ 
-            embeds: [new EmbedBuilder().setTitle('Select Product').setColor(0x00ff00)], 
+            embeds: [new EmbedBuilder().setTitle('🎯 Choose Product').setColor(0x00ff88)], 
             components: [new ActionRowBuilder().addComponents(menu)] 
         });
     }
@@ -97,19 +104,22 @@ client.on('interactionCreate', async interaction => {
         const [_, plan, price] = interaction.values[0].split('_');
         interaction.reply({
             embeds: [new EmbedBuilder()
-                .setTitle('💰 Payment')
-                .setDescription(`**Product:** ${interaction.values[0]}\n**Amount:** $${price}\n\n**MUST SEND EXACT AMOUNT**\nPaste your **TXID** here.`)
+                .setTitle('💎 Payment Instructions')
+                .setDescription(`**Product:** ${interaction.values[0].replace(/_/g, ' ')}\n**Price:** $${price}\n\n**Send the exact amount** then paste your **TXID** here.`)
+                .setColor(0x00ff88)
                 .addFields(
-                    { name: 'Bitcoin', value: '`bc1qknrm6zgfwkxl3dp5rgze6ha335ml69tzed7ph4`' },
-                    { name: 'Litecoin', value: '`LdX2Svxt2MdhfZNyjV1Tm4Pj41yuzmAFka`' },
-                    { name: 'ETH/BNB', value: '`0x7382956c59E425df370Ca365286538236d06e3A0`' },
-                    { name: 'Solana', value: '`DzxPUtXm9fwXDZ4T7r5e7HsRh34XsJoHVGuRexCE4f2Q`' }
+                    { name: 'Bitcoin', value: '`bc1qknrm6zgfwkxl3dp5rgze6ha335ml69tzed7ph4`', inline: false },
+                    { name: 'Litecoin', value: '`LdX2Svxt2MdhfZNyjV1Tm4Pj41yuzmAFka`', inline: false },
+                    { name: 'ETH / BNB', value: '`0x7382956c59E425df370Ca365286538236d06e3A0`', inline: false },
+                    { name: 'Solana', value: '`DzxPUtXm9fwXDZ4T7r5e7HsRh34XsJoHVGuRexCE4f2Q`', inline: false }
                 )
+                .setFooter({ text: 'Auto-verified • No staff needed' })
             ]
         });
     }
 });
 
+// Payment Verification
 client.on('messageCreate', async message => {
     if (message.channel.name.startsWith('purchase-') && !message.author.bot) {
         const txid = message.content.trim();
@@ -163,7 +173,7 @@ async function verifyPayment(txid, message) {
 
         message.channel.send(`✅ **Payment Verified!**\n**Network:** ${network}\n**Key:** \`${key}\`\n\nTicket closing in 8 seconds...`);
 
-        user.send(`✅ **Payment Successful!**\n**Key:** \`${key}\``).catch(() => {});
+        user.send(`✅ **Payment Successful!**\n**Product:** ${message.channel.name}\n**Key:** \`${key}\``).catch(() => {});
 
         setTimeout(() => message.channel.delete().catch(() => {}), 8000);
     }
