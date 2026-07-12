@@ -23,7 +23,7 @@ client.on('ready', () => {
 
 async function sendPaymentLog(user, product, txid, key, network) {
     const paymentsChannel = await client.channels.fetch(PAYMENTS_CHANNEL_ID).catch(() => null);
-    
+   
     if (paymentsChannel) {
         paymentsChannel.send({
             content: `<@${OWNER_ID}> New Payment!`,
@@ -41,9 +41,8 @@ async function sendPaymentLog(user, product, txid, key, network) {
             ]
         });
     }
-}
+});
 
-// !panel Command
 client.on('messageCreate', async message => {
     if (message.content === '!panel' && message.author.id === OWNER_ID) {
         const embed = new EmbedBuilder()
@@ -55,8 +54,7 @@ client.on('messageCreate', async message => {
                 { name: '🛡️ HWID Spoofer', value: '```Permanent — $35\nTemporary — $15```', inline: false },
                 { name: '✅ How It Works', value: '1. Click Purchase\n2. Select Product\n3. Pay Crypto\n4. Paste TXID → Auto Verified' }
             )
-            .setFooter({ text: 'StrikeX | Trusted' })
-            .setTimestamp();
+            .setFooter({ text: 'StrikeX' });
 
         const button = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -73,8 +71,5 @@ client.on('messageCreate', async message => {
         setTimeout(() => message.channel.delete().catch(() => {}), 3000);
     }
 });
-
-// Rest of the code (Ticket + Verification) remains the same as before
-// ... (I'll keep it short here for clarity, but use the full version from previous message)
 
 client.login(process.env.BOT_TOKEN);
