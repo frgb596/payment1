@@ -29,7 +29,7 @@ client.on('guildMemberAdd', async member => {
     if (unverifiedRole) await member.roles.add(unverifiedRole).catch(() => {});
 });
 
-// !rules & !panel
+// Commands
 client.on('messageCreate', async message => {
     if (message.content === '!rules') {
         const embed = new EmbedBuilder()
@@ -76,6 +76,11 @@ client.on('messageCreate', async message => {
         );
 
         message.channel.send({ embeds: [embed], components: [button] });
+    }
+
+    if (message.content === '!close' && message.channel.name.startsWith('purchase-')) {
+        message.reply('🔒 Closing ticket in 5 seconds...');
+        setTimeout(() => message.channel.delete().catch(() => {}), 5000);
     }
 });
 
@@ -139,19 +144,28 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-// Automated Responses + Payment Check
+// Auto close ticket after 4 hours
+client.on('channelCreate', async channel => {
+    if (channel.name.startsWith('purchase-')) {
+        setTimeout(async () => {
+            if (channel) await channel.delete().catch(() => {});
+        }, 4 * 60 * 60 * 1000); // 4 hours
+    }
+});
+
+// Payment Verification + Auto Replies
 client.on('messageCreate', async message => {
     if (message.channel.name.startsWith('purchase-') && !message.author.bot) {
         const content = message.content.toLowerCase().trim();
         const txid = message.content.trim();
 
-        // Automated Responses
+        // Automated Replies
         if (content === 'hi' || content === 'hello' || content === 'hey') {
-            message.reply("Hello! Please send your TXID after making payment.");
+            message.reply("Hello! Please send your TXID after payment.");
         } else if (content.includes('how long') || content.includes('when')) {
-            message.reply("Payments are usually verified within 1-5 minutes after sending the TXID.");
+            message.reply("Payments are usually verified within 1-5 minutes.");
         } else if (content.includes('help') || content.includes('support')) {
-            message.reply("Please send your TXID. If you have any issue, a staff member will assist you soon.");
+            message.reply("Please send your TXID. Staff will assist you soon if needed.");
         } else if (content.includes('thanks') || content.includes('thank')) {
             message.reply("You're welcome! Enjoy your purchase.");
         } 
