@@ -42,6 +42,7 @@ async function sendPaymentLog(user, product, txid, key, network) {
     }
 }
 
+// !panel
 client.on('messageCreate', async message => {
     if (message.content === '!panel' && message.author.id === OWNER_ID) {
         const embed = new EmbedBuilder()
@@ -71,6 +72,7 @@ client.on('messageCreate', async message => {
     }
 });
 
+// Ticket System
 client.on('interactionCreate', async interaction => {
     if (interaction.isButton() && interaction.customId === 'create_ticket') {
         const ticket = await interaction.guild.channels.create({
@@ -84,21 +86,25 @@ client.on('interactionCreate', async interaction => {
 
         interaction.reply({ content: `✅ Ticket created → ${ticket}`, ephemeral: true });
 
-        const menu = new StringSelectMenuBuilder()
-            .setCustomId('product_select')
-            .setPlaceholder('Select your product...')
-            .addOptions([
-                { label: '24h Cheat', value: 'cheat_24h_5', emoji: '⚡' },
-                { label: '7d Cheat', value: 'cheat_7d_20', emoji: '⚡' },
-                { label: '30d Cheat', value: 'cheat_30d_45', emoji: '⚡' },
-                { label: 'Lifetime Cheat', value: 'cheat_life_130', emoji: '⚡' },
-                { label: 'Permanent Spoofer', value: 'spoof_perm_35', emoji: '🔒' },
-                { label: 'Temporary Spoofer', value: 'spoof_temp_15', emoji: '🔄' }
-            ]);
-
-        ticket.send({ 
-            embeds: [new EmbedBuilder().setTitle('🎯 Choose Product').setColor(0x00ff88)], 
-            components: [new ActionRowBuilder().addComponents(menu)] 
+        ticket.send({
+            embeds: [new EmbedBuilder()
+                .setTitle('🎯 Select Product')
+                .setDescription('Choose the product you want to buy.')
+                .setColor(0x00ff88)
+            ],
+            components: [new ActionRowBuilder().addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId('product_select')
+                    .setPlaceholder('Select your product...')
+                    .addOptions([
+                        { label: '24h Cheat', value: 'cheat_24h_5', emoji: '⚡' },
+                        { label: '7d Cheat', value: 'cheat_7d_20', emoji: '⚡' },
+                        { label: '30d Cheat', value: 'cheat_30d_45', emoji: '⚡' },
+                        { label: 'Lifetime Cheat', value: 'cheat_life_130', emoji: '⚡' },
+                        { label: 'Permanent Spoofer', value: 'spoof_perm_35', emoji: '🔒' },
+                        { label: 'Temporary Spoofer', value: 'spoof_temp_15', emoji: '🔄' }
+                    ])
+            )]
         });
     }
 
@@ -107,7 +113,7 @@ client.on('interactionCreate', async interaction => {
         interaction.reply({
             embeds: [new EmbedBuilder()
                 .setTitle('💎 Payment Instructions')
-                .setDescription(`**Product:** ${interaction.values[0].replace(/_/g, ' ')}\n**Price:** $${price}\n\nSend exact amount then paste **TXID** here.`)
+                .setDescription(`**Product:** ${interaction.values[0].replace(/_/g, ' ')}\n**Price:** $${price}\n\nSend the exact amount, then paste your **TXID** here.`)
                 .setColor(0x00ff88)
                 .addFields(
                     { name: 'Bitcoin', value: '`bc1qknrm6zgfwkxl3dp5rgze6ha335ml69tzed7ph4`', inline: false },
@@ -120,12 +126,24 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// Payment Verification (Only when message looks like TXID)
 client.on('messageCreate', async message => {
     if (message.channel.name.startsWith('purchase-') && !message.author.bot) {
         const txid = message.content.trim();
-        const success = await verifyPayment(txid, message);
-        if (!success) {
-            message.reply("❌ **Invalid or fake TXID!**\nHey did you try sending a fake TXID 😡");
+
+        // Only check if it looks like a TXID
+        if (txid.length > 30) {
+            const success = await verifyPayment(txid, message);
+            if (!success) {
+                message.reply("❌ **Invalid or fake TXID!**\nHey did you try sending a fake TXID 😡");
+            }
+        } else {
+            // Automated responses for normal messages
+            if (txid.toLowerCase().includes('hi') || txid.toLowerCase().includes('hello')) {
+                message.reply("Hello! Please send your TXID after payment.");
+            } else if (txid.toLowerCase().includes('how long')) {
+                message.reply("Payments are usually verified within 1-5 minutes.");
+            }
         }
     }
 });
@@ -136,22 +154,22 @@ async function verifyPayment(txid, message) {
     let verified = false;
     let network = "Unknown";
 
-    if (txid.length > 70) {
+    if (txid.length > 70) { // Solana
         try {
             const res = await axios.post('https://api.mainnet-beta.solana.com', { jsonrpc: "2.0", id: 1, method: "getTransaction", params: [txid, { commitment: "confirmed" }] });
             if (res.data.result) { verified = true; network = "Solana"; }
         } catch(e) {}
-    } else if (txid.length >= 60 && txid.length <= 70) {
+    } else if (txid.length >= 60 && txid.length <= 70) { // Bitcoin
         try {
             const res = await axios.get(`https://blockchain.info/rawtx/${txid}`);
             if (res.data) { verified = true; network = "Bitcoin"; }
         } catch(e) {}
-    } else if (txid.startsWith('L') || txid.length >= 60) {
+    } else if (txid.startsWith('L') || txid.length >= 60) { // Litecoin
         try {
             const res = await axios.get(`https://api.blockcypher.com/v1/ltc/main/txs/${txid}`);
             if (res.data) { verified = true; network = "Litecoin"; }
         } catch(e) {}
-    } else if (txid.length === 66 && txid.startsWith('0x')) {
+    } else if (txid.length === 66 && txid.startsWith('0x')) { // ETH/BNB
         try {
             const res = await axios.post('https://eth.llamarpc.com', { jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [txid] });
             if (res.data.result) { verified = true; network = "ETH/BNB"; }
