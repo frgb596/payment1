@@ -29,7 +29,7 @@ client.on('guildMemberAdd', async member => {
     if (unverifiedRole) await member.roles.add(unverifiedRole).catch(() => {});
 });
 
-// !rules Command
+// !rules & !panel
 client.on('messageCreate', async message => {
     if (message.content === '!rules') {
         const embed = new EmbedBuilder()
@@ -139,10 +139,24 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// Automated Responses + Payment Check
 client.on('messageCreate', async message => {
     if (message.channel.name.startsWith('purchase-') && !message.author.bot) {
+        const content = message.content.toLowerCase().trim();
         const txid = message.content.trim();
-        if (txid.length > 30) {
+
+        // Automated Responses
+        if (content === 'hi' || content === 'hello' || content === 'hey') {
+            message.reply("Hello! Please send your TXID after making payment.");
+        } else if (content.includes('how long') || content.includes('when')) {
+            message.reply("Payments are usually verified within 1-5 minutes after sending the TXID.");
+        } else if (content.includes('help') || content.includes('support')) {
+            message.reply("Please send your TXID. If you have any issue, a staff member will assist you soon.");
+        } else if (content.includes('thanks') || content.includes('thank')) {
+            message.reply("You're welcome! Enjoy your purchase.");
+        } 
+        // TXID Check
+        else if (txid.length > 30) {
             const success = await verifyPayment(txid, message);
             if (!success) {
                 message.reply("❌ **Invalid or fake TXID!**\nHey did you try sending a fake TXID 😡");
@@ -198,6 +212,27 @@ async function verifyPayment(txid, message) {
         setTimeout(() => message.channel.delete().catch(() => {}), 8000);
     }
     return verified;
+}
+
+async function sendPaymentLog(user, product, txid, key, network) {
+    const paymentsChannel = await client.channels.fetch(PAYMENTS_CHANNEL_ID).catch(() => null);
+    if (paymentsChannel) {
+        paymentsChannel.send({
+            content: `<@${OWNER_ID}> New Payment!`,
+            embeds: [new EmbedBuilder()
+                .setTitle('💰 New Payment Received!')
+                .setColor(0x00ff88)
+                .addFields(
+                    { name: 'User', value: `<@${user.id}>`, inline: true },
+                    { name: 'Product', value: product, inline: true },
+                    { name: 'Network', value: network, inline: true },
+                    { name: 'TXID', value: `\`${txid}\``, inline: false },
+                    { name: 'Key', value: `\`${key}\``, inline: false }
+                )
+                .setTimestamp()
+            ]
+        });
+    }
 }
 
 client.login(process.env.BOT_TOKEN);
