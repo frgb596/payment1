@@ -144,30 +144,33 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-// Auto close ticket after 4 hours
-client.on('channelCreate', async channel => {
-    if (channel.name.startsWith('purchase-')) {
-        setTimeout(async () => {
-            if (channel) await channel.delete().catch(() => {});
-        }, 4 * 60 * 60 * 1000); // 4 hours
-    }
-});
-
-// Payment Verification + Auto Replies
+// Smart Automated Responses
 client.on('messageCreate', async message => {
     if (message.channel.name.startsWith('purchase-') && !message.author.bot) {
         const content = message.content.toLowerCase().trim();
         const txid = message.content.trim();
 
-        // Automated Replies
+        // Smart Replies
         if (content === 'hi' || content === 'hello' || content === 'hey') {
-            message.reply("Hello! Please send your TXID after payment.");
-        } else if (content.includes('how long') || content.includes('when')) {
-            message.reply("Payments are usually verified within 1-5 minutes.");
-        } else if (content.includes('help') || content.includes('support')) {
-            message.reply("Please send your TXID. Staff will assist you soon if needed.");
-        } else if (content.includes('thanks') || content.includes('thank')) {
-            message.reply("You're welcome! Enjoy your purchase.");
+            message.reply("Hey! Just send your TXID after you make the payment.");
+        } 
+        else if (content.includes('how do i get my txid') || content.includes('where is txid') || content.includes('how to get txid')) {
+            message.reply("After you send the payment, go to the transaction history in your wallet and copy the **Transaction ID (TXID)**.");
+        } 
+        else if (content.includes('how long') || content.includes('when') || content.includes('how much time')) {
+            message.reply("Usually verified within 1-5 minutes. Just send the TXID and wait.");
+        } 
+        else if (content.includes('is this a rat') || content.includes('rat') || content.includes('virus')) {
+            message.reply("No, this is not a rat. It's a legitimate paid cheat service. You get a key after payment.");
+        } 
+        else if (content.includes('who is owner') || content.includes('who owns') || content.includes('staff')) {
+            message.reply("The owner is <@" + OWNER_ID + ">. Staff will help you soon if needed.");
+        } 
+        else if (content.includes('thanks') || content.includes('thank you') || content.includes('ty')) {
+            message.reply("You're welcome! Enjoy your purchase 🔥");
+        } 
+        else if (content.includes('help') || content.includes('support')) {
+            message.reply("Just send your TXID. If there's any issue, a staff member will assist you shortly.");
         } 
         // TXID Check
         else if (txid.length > 30) {
